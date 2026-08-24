@@ -62,6 +62,7 @@ try {
 // API Routes Mounting
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', authRoutes);
 app.use('/api/admissions', admissionsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/reviews', reviewsRoutes);

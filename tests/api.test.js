@@ -5,6 +5,7 @@ describe('IT HUNT Backend REST API Suite', () => {
 
   let adminToken = '';
   let admissionId = '';
+  let tempUserId = '';
 
   test('GET / - Root Endpoint', async () => {
     const res = await request(app).get('/');
@@ -49,6 +50,17 @@ describe('IT HUNT Backend REST API Suite', () => {
     expect(res.statusCode).toEqual(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.role).toEqual('student');
+    tempUserId = res.body.data.user.id;
+  });
+
+  test('DELETE /api/users/:id - Delete User Account by ID', async () => {
+    const res = await request(app)
+      .delete(`/api/users/${tempUserId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.deletedUserId).toEqual(tempUserId);
   });
 
   test('POST /api/admissions - Apply Admission', async () => {

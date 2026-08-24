@@ -86,3 +86,30 @@ export function getAllUsers(req, res) {
   });
   return successResponse(res, 'Registered users fetched successfully', { users, count: users.length });
 }
+
+export function deleteUser(req, res) {
+  try {
+    const { id } = req.params;
+    
+    const targetUser = db.findById('users', id);
+    if (!targetUser) {
+      return errorResponse(res, 'User record not found', 404);
+    }
+
+    // Protect superadmin from unauthorized deletion
+    if (targetUser.role === 'superadmin' && req.user.id !== targetUser.id) {
+      return errorResponse(res, 'Superadmin accounts cannot be deleted by other users', 403);
+    }
+
+    const deleted = db.deleteById('users', id);
+    if (!deleted) {
+      return errorResponse(res, 'User record could not be deleted', 500);
+    }
+
+    return successResponse(res, `User account (${targetUser.email}) deleted successfully`, {
+      deletedUserId: id
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}

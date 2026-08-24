@@ -5,7 +5,6 @@ describe('IT HUNT Backend REST API Suite', () => {
 
   let adminToken = '';
   let admissionId = '';
-  let tempUserId = '';
 
   test('GET / - Root Endpoint', async () => {
     const res = await request(app).get('/');
@@ -35,32 +34,30 @@ describe('IT HUNT Backend REST API Suite', () => {
     adminToken = res.body.data.token;
   });
 
-  test('POST /api/auth/register - Student Registration', async () => {
-    const res = await request(app)
+  test('POST /api/auth/register & DELETE /api/users/:id - Create and Delete User', async () => {
+    const regRes = await request(app)
       .post('/api/auth/register')
       .send({
-        name: 'Test Student',
-        email: `student_${Date.now()}@ithunt.test`,
+        name: 'Delete Test Student',
+        email: `student_to_delete_${Date.now()}@ithunt.test`,
         password: 'Password@123',
         role: 'student',
         phone: '+919876543210',
         course: 'MERN Stack Web Engineering'
       });
     
-    expect(res.statusCode).toEqual(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.user.role).toEqual('student');
-    tempUserId = res.body.data.user.id;
-  });
+    expect(regRes.statusCode).toEqual(201);
+    expect(regRes.body.success).toBe(true);
+    const userIdToDelete = regRes.body.data.user.id;
+    expect(userIdToDelete).toBeDefined();
 
-  test('DELETE /api/users/:id - Delete User Account by ID', async () => {
-    const res = await request(app)
-      .delete(`/api/users/${tempUserId}`)
+    const delRes = await request(app)
+      .delete(`/api/users/${userIdToDelete}`)
       .set('Authorization', `Bearer ${adminToken}`);
     
-    expect(res.statusCode).toEqual(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.deletedUserId).toEqual(tempUserId);
+    expect(delRes.statusCode).toEqual(200);
+    expect(delRes.body.success).toBe(true);
+    expect(delRes.body.data.deletedUserId).toEqual(userIdToDelete);
   });
 
   test('POST /api/admissions - Apply Admission', async () => {

@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "IT HUNT Backend REST API",
-    "description": "Production REST API backend for IT HUNT Software Solutions & Tech Academy (Prayagraj, UP). Serving Admissions, Careers, Reviews, NIELIT Projects, Courses, and SuperAdmin metrics.",
+    "description": "Production REST API backend for IT HUNT Software Solutions & Tech Academy (Prayagraj, UP). Serving Admissions, Careers, Reviews, NIELIT Projects, Courses, User Management, and SuperAdmin metrics.",
     "version": "1.0.0",
     "contact": {
       "name": "IT HUNT Director & Lead",
@@ -78,6 +78,28 @@
         },
         "responses": {
           "200": { "description": "Authentication token issued" }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "Get all registered users (Admin authentication required)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User list" }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "delete": {
+        "summary": "Delete user account by ID (Admin authentication required)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "User account deleted successfully from DB and Firebase" },
+          "404": { "description": "User not found" }
         }
       }
     },

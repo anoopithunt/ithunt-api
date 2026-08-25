@@ -169,10 +169,10 @@ export const db = {
 
       if (isFirebaseInitialized && hasFirebaseCredentials()) {
         if (firestoreDb) {
-          firestoreDb.collection(firestoreCollName).doc(id).update({
+          firestoreDb.collection(firestoreCollName).doc(id).set({
             ...updates,
             updatedAt: new Date().toISOString()
-          }).catch(e => console.warn(`Firebase Firestore update notice:`, e.message));
+          }, { merge: true }).catch(e => console.warn(`Firebase Firestore update notice:`, e.message));
         }
 
         if (realtimeDb) {

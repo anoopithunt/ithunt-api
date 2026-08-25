@@ -401,10 +401,67 @@ describe('IT HUNT Backend REST API Suite', () => {
 
     expect(submitRes.statusCode).toEqual(201);
     expect(submitRes.body.data.submission.status).toEqual('UNDER_REVIEW');
+    const submittedFormId = submitRes.body.data.submission.id;
 
-    // 5. Delete project
+    // 5. Update Submitted Project Form
+    const updateRes = await request(app)
+      .put(`/api/projects/${submittedFormId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Library Automation & Advanced Barcode Management (v2)',
+        status: 'APPROVED',
+        featured: true
+      });
+
+    expect(updateRes.statusCode).toEqual(200);
+    expect(updateRes.body.data.project.title).toContain('(v2)');
+
+    // 6. Delete submitted project form
+    const delSubmittedRes = await request(app)
+      .delete(`/api/projects/${submittedFormId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(delSubmittedRes.statusCode).toEqual(200);
+    expect(delSubmittedRes.body.success).toBe(true);
+
+    // 7. Delete created project
     const delRes = await request(app)
       .delete(`/api/projects/${createdProjectId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(delRes.statusCode).toEqual(200);
+    expect(delRes.body.success).toBe(true);
+  });
+
+  test('POST /api/nielit-projects, PUT, & DELETE - NIELIT Submitted Project Form Management', async () => {
+    // 1. Submit form
+    const subRes = await request(app)
+      .post('/api/nielit-projects')
+      .send({
+        studentName: 'Vikas Dubey',
+        regNo: 'ITH-NIELIT-9921',
+        projectTitle: 'Inventory Stock Controller with SQLite',
+        level: 'A Level'
+      });
+
+    expect(subRes.statusCode).toEqual(201);
+    const nielitId = subRes.body.data.project.id;
+
+    // 2. Update form details
+    const updRes = await request(app)
+      .put(`/api/nielit-projects/${nielitId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        projectTitle: 'Inventory Stock Controller Pro with PostgreSQL',
+        status: 'VERIFIED_AND_SUBMITTED'
+      });
+
+    expect(updRes.statusCode).toEqual(200);
+    expect(updRes.body.data.project.projectTitle).toContain('Pro');
+
+    // 3. Delete form
+    const delRes = await request(app)
+      .delete(`/api/nielit-projects/${nielitId}`)
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(delRes.statusCode).toEqual(200);

@@ -15,6 +15,7 @@ import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.j
 
 import healthRoutes from './routes/healthRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import studentsRoutes from './routes/studentsRoutes.js';
 import admissionsRoutes from './routes/admissionsRoutes.js';
 import careersRoutes from './routes/careersRoutes.js';
 import reviewsRoutes from './routes/reviewsRoutes.js';
@@ -63,6 +64,7 @@ try {
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authRoutes);
+app.use('/api/students', studentsRoutes);
 app.use('/api/admissions', admissionsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/reviews', reviewsRoutes);

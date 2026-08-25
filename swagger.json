@@ -81,6 +81,85 @@
         }
       }
     },
+    "/api/students/register": {
+      "post": {
+        "summary": "Register student (Creates distinct records in auth 'users' and 'students' tables)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "course": { "type": "string" },
+                  "dob": { "type": "string" },
+                  "gender": { "type": "string" },
+                  "address": { "type": "string" },
+                  "guardianName": { "type": "string" },
+                  "guardianPhone": { "type": "string" },
+                  "batch": { "type": "string" },
+                  "bio": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Student registered successfully in users and students tables" }
+        }
+      }
+    },
+    "/api/students/login": {
+      "post": {
+        "summary": "Authenticate student & return auth token and student details profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Student authentication successful" }
+        }
+      }
+    },
+    "/api/students/me": {
+      "get": {
+        "summary": "Get authenticated student's profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Student profile fetched" }
+        }
+      },
+      "put": {
+        "summary": "Update authenticated student's profile details",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Student profile updated" }
+        }
+      }
+    },
+    "/api/students": {
+      "get": {
+        "summary": "Get all student records from students table (Admin/Faculty required)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of student detail records" }
+        }
+      }
+    },
     "/api/users": {
       "get": {
         "summary": "Get all registered users (Admin authentication required)",

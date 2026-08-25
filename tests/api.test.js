@@ -134,4 +134,87 @@ describe('IT HUNT Backend REST API Suite', () => {
     expect(res.body.data.stats).toHaveProperty('totalReviews');
   });
 
+  test('POST /api/students/register & POST /api/students/login - Distinct Auth & Student Details Storage', async () => {
+    const testEmail = `student_full_${Date.now()}@ithunt.in`;
+    const regRes = await request(app)
+      .post('/api/students/register')
+      .send({
+        name: 'Rohan Verma',
+        email: testEmail,
+        password: 'StudentPass@123',
+        phone: '+919876500112',
+        course: 'NIELIT O Level Diploma',
+        guardianName: 'Suresh Verma',
+        guardianPhone: '+919876500100',
+        dob: '2002-05-15',
+        gender: 'male',
+        address: 'Civil Lines, Prayagraj, UP'
+      });
+
+    expect(regRes.statusCode).toEqual(201);
+    expect(regRes.body.success).toBe(true);
+    expect(regRes.body.data).toHaveProperty('user');
+    expect(regRes.body.data).toHaveProperty('student');
+    expect(regRes.body.data).toHaveProperty('token');
+    
+    // Verify distinct table data linking
+    expect(regRes.body.data.user.role).toEqual('student');
+    expect(regRes.body.data.student.userId).toEqual(regRes.body.data.user.id);
+    expect(regRes.body.data.student.enrollmentNumber).toMatch(/^ITH-\d{4}-STU\d{4}$/);
+    expect(regRes.body.data.student.guardianName).toEqual('Suresh Verma');
+
+    const studentToken = regRes.body.data.token;
+    const studentId = regRes.body.data.student.id;
+
+    // Test Student Login
+    const loginRes = await request(app)
+      .post('/api/students/login')
+      .send({
+        email: testEmail,
+        password: 'StudentPass@123'
+      });
+
+    expect(loginRes.statusCode).toEqual(200);
+    expect(loginRes.body.success).toBe(true);
+    expect(loginRes.body.data.student).toBeDefined();
+    expect(loginRes.body.data.student.enrollmentNumber).toEqual(regRes.body.data.student.enrollmentNumber);
+
+    // Test Get Student Profile (Self)
+    const profileRes = await request(app)
+      .get('/api/students/me')
+      .set('Authorization', `Bearer ${studentToken}`);
+
+    expect(profileRes.statusCode).toEqual(200);
+    expect(profileRes.body.data.student.name).toEqual('Rohan Verma');
+
+    // Test Update Student Profile (Self)
+    const updateRes = await request(app)
+      .put('/api/students/me')
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({
+        bio: 'Aspiring Software Developer learning NIELIT O level',
+        phone: '+919876500999'
+      });
+
+    expect(updateRes.statusCode).toEqual(200);
+    expect(updateRes.body.data.student.bio).toEqual('Aspiring Software Developer learning NIELIT O level');
+
+    // Test Admin Get All Students
+    const allStudentsRes = await request(app)
+      .get('/api/students')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(allStudentsRes.statusCode).toEqual(200);
+    expect(allStudentsRes.body.data.students.length).toBeGreaterThan(0);
+
+    // Test Admin Delete Student (removes from both distinct tables)
+    const deleteRes = await request(app)
+      .delete(`/api/students/${studentId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(deleteRes.statusCode).toEqual(200);
+    expect(deleteRes.body.success).toBe(true);
+    expect(deleteRes.body.data.deletedStudentId).toEqual(studentId);
+  });
+
 });

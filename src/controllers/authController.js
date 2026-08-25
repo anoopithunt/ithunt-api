@@ -11,7 +11,8 @@ export async function register(req, res) {
       return errorResponse(res, 'Name, email, and password are required fields', 400);
     }
 
-    const existingUser = db.findOne('users', u => u.email.toLowerCase() === email.toLowerCase());
+    const lowerEmail = email.toLowerCase();
+    const existingUser = db.findOne('users', u => u.email.toLowerCase() === lowerEmail);
     if (existingUser) {
       return errorResponse(res, 'An account with this email address already exists', 409);
     }
@@ -21,7 +22,7 @@ export async function register(req, res) {
 
     const newUser = db.insert('users', {
       name,
-      email: email.toLowerCase(),
+      email: lowerEmail,
       password: hashedPassword,
       role: assignedRole,
       phone: phone || '',
@@ -30,11 +31,36 @@ export async function register(req, res) {
       verified: true
     });
 
+    let studentRecord = null;
+    if (assignedRole === 'student') {
+      const year = new Date().getFullYear();
+      const studentCount = db.getCollection('students').length + 1;
+      const enrollmentNumber = `ITH-${year}-STU${String(studentCount).padStart(4, '0')}`;
+
+      studentRecord = db.insert('students', {
+        userId: newUser.id,
+        name,
+        email: lowerEmail,
+        phone: phone || '',
+        course: course || '',
+        enrollmentNumber,
+        dob: req.body.dob || '',
+        gender: req.body.gender || '',
+        address: req.body.address || '',
+        guardianName: req.body.guardianName || '',
+        guardianPhone: req.body.guardianPhone || '',
+        batch: req.body.batch || `${year}`,
+        academicStatus: 'ACTIVE',
+        bio: bio || ''
+      });
+    }
+
     const token = generateToken({ id: newUser.id, role: newUser.role, email: newUser.email });
     const { password: _, ...userWithoutPassword } = newUser;
 
     return successResponse(res, 'User registered successfully', {
       user: userWithoutPassword,
+      student: studentRecord,
       token
     }, 201);
   } catch (error) {
@@ -50,7 +76,8 @@ export async function login(req, res) {
       return errorResponse(res, 'Email and password are required', 400);
     }
 
-    const user = db.findOne('users', u => u.email.toLowerCase() === email.toLowerCase());
+    const lowerEmail = email.toLowerCase();
+    const user = db.findOne('users', u => u.email.toLowerCase() === lowerEmail);
     if (!user) {
       return errorResponse(res, 'Invalid email or password credentials', 401);
     }
@@ -60,11 +87,14 @@ export async function login(req, res) {
       return errorResponse(res, 'Invalid email or password credentials', 401);
     }
 
+    const studentRecord = db.findOne('students', s => s.userId === user.id || s.email.toLowerCase() === lowerEmail);
+
     const token = generateToken({ id: user.id, role: user.role, email: user.email });
     const { password: _, ...userWithoutPassword } = user;
 
     return successResponse(res, 'Authentication successful', {
       user: userWithoutPassword,
+      student: studentRecord || null,
       token
     });
   } catch (error) {

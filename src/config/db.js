@@ -12,6 +12,7 @@ const STORAGE_FILE = path.join(DATA_DIR, 'storage.json');
 // Collection mapping to Firebase Firestore collection names
 const FIRESTORE_COLLECTION_MAP = {
   users: 'users',
+  students: 'students',
   admissions: 'admissions',
   careers: 'job_applications',
   reviews: 'reviews',
@@ -25,6 +26,7 @@ const FIRESTORE_COLLECTION_MAP = {
 // Memory cache of DB tables
 let dbState = {
   users: [],
+  students: [],
   admissions: [],
   careers: [],
   reviews: [],

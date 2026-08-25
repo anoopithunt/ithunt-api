@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import { initFirebase, hasFirebaseCredentials } from './firebase.js';
+import config from './env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -129,6 +130,17 @@ export const db = {
             .then(() => console.log(`✓ Record synced to Firebase Realtime DB "${firestoreCollName}" ID: ${newItem.id}`))
             .catch(e => console.warn(`Firebase Realtime DB sync notice:`, e.message));
         }
+      } else if (config.firebaseDatabaseUrl) {
+        // Fallback to Firebase Realtime DB REST API
+        fetch(`${config.firebaseDatabaseUrl}/${firestoreCollName}/${newItem.id}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newItem)
+        }).then(async res => {
+          if (res.ok) {
+            console.log(`✓ Record synced to Firebase Realtime DB via REST "${firestoreCollName}" ID: ${newItem.id}`);
+          }
+        }).catch(() => {});
       }
     } catch (e) {
       // Graceful fallback
@@ -167,6 +179,12 @@ export const db = {
             updatedAt: new Date().toISOString()
           }).catch(e => console.warn(`Firebase Realtime DB update notice:`, e.message));
         }
+      } else if (config.firebaseDatabaseUrl) {
+        fetch(`${config.firebaseDatabaseUrl}/${firestoreCollName}/${id}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...updates, updatedAt: new Date().toISOString() })
+        }).catch(() => {});
       }
     } catch (e) {}
 
@@ -195,6 +213,10 @@ export const db = {
           realtimeDb.ref(`${firestoreCollName}/${id}`).remove()
             .catch(e => console.warn(`Firebase Realtime DB delete notice:`, e.message));
         }
+      } else if (config.firebaseDatabaseUrl) {
+        fetch(`${config.firebaseDatabaseUrl}/${firestoreCollName}/${id}.json`, {
+          method: 'DELETE'
+        }).catch(() => {});
       }
     } catch (e) {}
 

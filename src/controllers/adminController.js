@@ -5,7 +5,9 @@ import {
   fetchDocumentFromFirestore,
   fetchFromRealtimeDB,
   fetchFilesFromStorage,
-  firestoreDb
+  firestoreDb,
+  initFirebase,
+  hasFirebaseCredentials
 } from '../config/firebase.js';
 
 export function getDashboardStats(req, res) {
@@ -141,6 +143,90 @@ export async function getRealtimeDBData(req, res) {
     return successResponse(res, `Firebase Realtime DB data for path "${path}" fetched successfully`, {
       path,
       data
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}
+
+/**
+ * Diagnostic status of Firebase Connection & Credentials
+ */
+export function getFirebaseStatus(req, res) {
+  const { isFirebaseInitialized } = initFirebase();
+  const hasCreds = hasFirebaseCredentials();
+
+  return successResponse(res, 'Firebase Connection & Credentials Diagnostic Status', {
+    projectId: 'ithunt-3a42d',
+    databaseUrl: 'https://ithunt-3a42d-default-rtdb.firebaseio.com',
+    isFirebaseInitialized,
+    hasServiceAccountCredentials: hasCreds,
+    realtimeDbUrl: 'https://console.firebase.google.com/project/ithunt-3a42d/database/ithunt-3a42d-default-rtdb/data',
+    helpMessage: hasCreds
+      ? 'Firebase Admin SDK is fully authenticated with Service Account credentials.'
+      : 'Firebase Service Account credentials are not set in .env. To enable real-time writes, add FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in .env OR enable ".read": true, ".write": true in Firebase Console Realtime Database rules.'
+  });
+}
+
+/**
+ * Push all local collections to Firebase Realtime DB & Firestore
+ */
+export async function pushAllDataToFirebase(req, res) {
+  try {
+    const collections = [
+      'users',
+      'students',
+      'admissions',
+      'reviews',
+      'courses',
+      'internships',
+      'certificates',
+      'fees',
+      'faculty',
+      'attendance',
+      'contacts',
+      'nielitProjects',
+      'events',
+      'careers'
+    ];
+
+    const results = {};
+    const { realtimeDb, firestoreDb, isFirebaseInitialized } = initFirebase();
+    const hasCreds = hasFirebaseCredentials();
+
+    for (const collName of collections) {
+      const items = db.getCollection(collName);
+      let syncedCount = 0;
+
+      for (const item of items) {
+        if (isFirebaseInitialized && hasCreds) {
+          if (realtimeDb) {
+            await realtimeDb.ref(`${collName}/${item.id}`).set(item).catch(() => {});
+          }
+          if (firestoreDb) {
+            await firestoreDb.collection(collName).doc(item.id).set(item).catch(() => {});
+          }
+          syncedCount++;
+        } else {
+          // Attempt REST API push to Realtime Database
+          try {
+            const resp = await fetch(`https://ithunt-3a42d-default-rtdb.firebaseio.com/${collName}/${item.id}.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item)
+            });
+            if (resp.ok) syncedCount++;
+          } catch (e) {}
+        }
+      }
+
+      results[collName] = { total: items.length, syncedToFirebase: syncedCount };
+    }
+
+    return successResponse(res, 'Full Firebase Data Sync Operation Completed', {
+      hasServiceAccountCredentials: hasCreds,
+      syncSummary: results,
+      realtimeConsoleUrl: 'https://console.firebase.google.com/project/ithunt-3a42d/database/ithunt-3a42d-default-rtdb/data'
     });
   } catch (error) {
     return errorResponse(res, error.message, 500);

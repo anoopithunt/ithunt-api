@@ -2,13 +2,56 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getDatabase } from 'firebase-admin/database';
 import { getStorage } from 'firebase-admin/storage';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import config from './env.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.join(__dirname, '../../');
 
 let firebaseApp = null;
 let firestoreDb = null;
 let realtimeDb = null;
 let firebaseStorage = null;
 let isFirebaseInitialized = false;
+
+function getServiceAccountCredentials() {
+  // 1. Check if serviceAccountKey.json exists in root
+  const possiblePaths = [
+    path.join(ROOT_DIR, 'serviceAccountKey.json'),
+    path.join(ROOT_DIR, 'firebase-key.json'),
+    path.join(ROOT_DIR, 'firebase-service-account.json'),
+    process.env.GOOGLE_APPLICATION_CREDENTIALS || ''
+  ].filter(Boolean);
+
+  for (const filePath of possiblePaths) {
+    if (fs.existsSync(filePath)) {
+      try {
+        const fileContent = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        if (fileContent.project_id && fileContent.private_key) {
+          return cert(fileContent);
+        }
+      } catch (e) {}
+    }
+  }
+
+  // 2. Check environment variables
+  if (config.firebaseClientEmail && config.firebasePrivateKey) {
+    return cert({
+      projectId: config.firebaseProjectId,
+      clientEmail: config.firebaseClientEmail,
+      privateKey: config.firebasePrivateKey
+    });
+  }
+
+  return null;
+}
+
+export function hasFirebaseCredentials() {
+  return Boolean(getServiceAccountCredentials());
+}
 
 export function initFirebase() {
   if (isFirebaseInitialized) {
@@ -25,12 +68,9 @@ export function initFirebase() {
         databaseURL: config.firebaseDatabaseUrl
       };
 
-      if (config.firebaseClientEmail && config.firebasePrivateKey) {
-        adminConfig.credential = cert({
-          projectId: config.firebaseProjectId,
-          clientEmail: config.firebaseClientEmail,
-          privateKey: config.firebasePrivateKey
-        });
+      const credential = getServiceAccountCredentials();
+      if (credential) {
+        adminConfig.credential = credential;
       }
 
       app = initializeApp(adminConfig);
@@ -47,16 +87,12 @@ export function initFirebase() {
       // Storage optional
     }
     isFirebaseInitialized = true;
-    console.log(`✓ Firebase Admin SDK connected to project: ${config.firebaseProjectId}`);
+    console.log(`✓ Firebase Admin SDK connected to project: ${config.firebaseProjectId} (Authenticated: ${hasFirebaseCredentials()})`);
   } catch (err) {
     console.warn(`⚠️ Firebase Admin SDK initialization notice: ${err.message}`);
   }
 
   return { firebaseApp, firestoreDb, realtimeDb, firebaseStorage, isFirebaseInitialized };
-}
-
-export function hasFirebaseCredentials() {
-  return Boolean(config.firebaseClientEmail && config.firebasePrivateKey);
 }
 
 function withTimeout(promise, ms = 1500) {

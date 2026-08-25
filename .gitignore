@@ -10,6 +10,10 @@ yarn-error.log*
 .env.local
 .env.production
 *.pem
+*serviceAccount*.json
+serviceAccountKey.json
+firebase-key.json
+firebase-service-account.json
 
 # Database & Runtime data
 data/*.json

@@ -6,7 +6,8 @@ import {
   getFirebaseStorageFiles,
   getRealtimeDBData,
   pushAllDataToFirebase,
-  getFirebaseStatus
+  getFirebaseStatus,
+  wipeAllFirebaseData
 } from '../controllers/adminController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -15,9 +16,10 @@ const router = Router();
 // Executive Dashboard Stats
 router.get('/stats', authenticate, authorize('admin', 'superadmin'), getDashboardStats);
 
-// Diagnostic Status & Full Push
+// Diagnostic Status, Sync & Wipe
 router.get('/firebase/status', getFirebaseStatus);
 router.post('/firebase/sync-all', authenticate, authorize('admin', 'superadmin'), pushAllDataToFirebase);
+router.post('/firebase/wipe-all', authenticate, authorize('superadmin'), wipeAllFirebaseData);
 
 // Fetch Firebase Collections & Documents
 router.get('/firebase/collections/:collection', authenticate, authorize('admin', 'superadmin'), getFirebaseCollectionData);

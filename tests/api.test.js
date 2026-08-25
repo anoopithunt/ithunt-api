@@ -217,4 +217,134 @@ describe('IT HUNT Backend REST API Suite', () => {
     expect(deleteRes.body.data.deletedStudentId).toEqual(studentId);
   });
 
+  test('GET /api/admin/firebase/collections/:collection - Fetch Detail Collection from Firebase Firestore', async () => {
+    const res = await request(app)
+      .get('/api/admin/firebase/collections/students')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('collection');
+    expect(res.body.data.collection).toEqual('students');
+    expect(res.body.data).toHaveProperty('data');
+  });
+
+  test('GET /api/admin/firebase/storage/files - Fetch Firebase Cloud Storage Files', async () => {
+    const res = await request(app)
+      .get('/api/admin/firebase/storage/files')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('files');
+  });
+
+  test('POST /api/certificates & GET /api/certificates/verify/:certNo - Issue & Verify Official Certificate', async () => {
+    const issueRes = await request(app)
+      .post('/api/certificates')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        studentName: 'Sneha Patel',
+        enrollmentNumber: 'ITH-2026-STU0099',
+        courseName: 'Full Stack MERN Software Engineering',
+        grade: 'A+ (Distinction)',
+        duration: '6 Months'
+      });
+
+    expect(issueRes.statusCode).toEqual(201);
+    expect(issueRes.body.success).toBe(true);
+    const certNo = issueRes.body.data.certificate.certificateNumber;
+
+    const verifyRes = await request(app).get(`/api/certificates/verify/${certNo}`);
+    expect(verifyRes.statusCode).toEqual(200);
+    expect(verifyRes.body.data.isAuthentic).toBe(true);
+    expect(verifyRes.body.data.certificate.studentName).toEqual('Sneha Patel');
+  });
+
+  test('POST /api/fees/record & GET /api/fees/student/:id - Record Fee & Check Ledger', async () => {
+    const feeRes = await request(app)
+      .post('/api/fees/record')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        studentId: 'stu-test-101',
+        studentName: 'Amit Tripathi',
+        enrollmentNumber: 'ITH-2026-STU0101',
+        courseName: 'NIELIT O Level Diploma',
+        amount: 5000,
+        paymentMode: 'UPI'
+      });
+
+    expect(feeRes.statusCode).toEqual(201);
+    expect(feeRes.body.success).toBe(true);
+    expect(feeRes.body.data.payment).toHaveProperty('receiptNumber');
+
+    const ledgerRes = await request(app)
+      .get('/api/fees/student/stu-test-101')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(ledgerRes.statusCode).toEqual(200);
+    expect(ledgerRes.body.data.totalPaid).toBeGreaterThanOrEqual(5000);
+  });
+
+  test('POST /api/faculty & GET /api/faculty - Faculty Directory Management', async () => {
+    const facultyRes = await request(app)
+      .post('/api/faculty')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: 'Dr. Vivek Pandey',
+        email: `faculty_${Date.now()}@ithunt.in`,
+        phone: '+919876541122',
+        designation: 'Senior Faculty & Python AI Lead'
+      });
+
+    expect(facultyRes.statusCode).toEqual(201);
+    expect(facultyRes.body.success).toBe(true);
+
+    const listRes = await request(app).get('/api/faculty');
+    expect(listRes.statusCode).toEqual(200);
+    expect(listRes.body.data.faculty.length).toBeGreaterThan(0);
+  });
+
+  test('POST /api/attendance/mark & GET /api/attendance/student/:id - Student Attendance', async () => {
+    const markRes = await request(app)
+      .post('/api/attendance/mark')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        studentId: 'stu-test-101',
+        studentName: 'Amit Tripathi',
+        status: 'PRESENT',
+        topicCovered: 'React Hooks & State Management'
+      });
+
+    expect(markRes.statusCode).toEqual(201);
+    expect(markRes.body.success).toBe(true);
+
+    const attRes = await request(app)
+      .get('/api/attendance/student/stu-test-101')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(attRes.statusCode).toEqual(200);
+    expect(attRes.body.data.totalClasses).toBeGreaterThanOrEqual(1);
+  });
+
+  test('GET /api/internships & POST /api/internships/apply - Internship Tracks & Application', async () => {
+    const listRes = await request(app).get('/api/internships');
+    expect(listRes.statusCode).toEqual(200);
+    expect(listRes.body.data.internships.length).toBeGreaterThan(0);
+
+    const applyRes = await request(app)
+      .post('/api/internships/apply')
+      .send({
+        candidateName: 'Pooja Gupta',
+        email: 'pooja.gupta@example.com',
+        phone: '+919988771122',
+        college: 'University of Allahabad',
+        githubUrl: 'https://github.com/poojagupta'
+      });
+
+    expect(applyRes.statusCode).toEqual(201);
+    expect(applyRes.body.success).toBe(true);
+    expect(applyRes.body.data.application.status).toEqual('PENDING_REVIEW');
+  });
+
 });

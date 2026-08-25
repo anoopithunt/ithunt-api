@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
-import { initFirebase } from './firebase.js';
+import { initFirebase, hasFirebaseCredentials } from './firebase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +20,11 @@ const FIRESTORE_COLLECTION_MAP = {
   events: 'event_rsvps',
   courses: 'courses',
   internships: 'internships',
+  internshipApplications: 'internship_applications',
+  certificates: 'certificates',
+  fees: 'fees_payments',
+  faculty: 'faculty_members',
+  attendance: 'attendance_records',
   contacts: 'contacts'
 };
 
@@ -34,6 +39,11 @@ let dbState = {
   events: [],
   courses: [],
   internships: [],
+  internshipApplications: [],
+  certificates: [],
+  fees: [],
+  faculty: [],
+  attendance: [],
   contacts: []
 };
 
@@ -104,19 +114,21 @@ export const db = {
 
     // Async Push to Firebase Firestore & Realtime DB
     try {
-      const { firestoreDb, realtimeDb } = initFirebase();
+      const { firestoreDb, realtimeDb, isFirebaseInitialized } = initFirebase();
       const firestoreCollName = FIRESTORE_COLLECTION_MAP[collectionName] || collectionName;
 
-      if (firestoreDb) {
-        firestoreDb.collection(firestoreCollName).doc(newItem.id).set(newItem)
-          .then(() => console.log(`✓ Record saved to Firebase Firestore collection "${firestoreCollName}" ID: ${newItem.id}`))
-          .catch(e => console.warn(`Firebase Firestore save notice (${firestoreCollName}):`, e.message));
-      }
+      if (isFirebaseInitialized && hasFirebaseCredentials()) {
+        if (firestoreDb) {
+          firestoreDb.collection(firestoreCollName).doc(newItem.id).set(newItem)
+            .then(() => console.log(`✓ Record saved to Firebase Firestore collection "${firestoreCollName}" ID: ${newItem.id}`))
+            .catch(e => console.warn(`Firebase Firestore save notice (${firestoreCollName}):`, e.message));
+        }
 
-      if (realtimeDb) {
-        realtimeDb.ref(`${firestoreCollName}/${newItem.id}`).set(newItem)
-          .then(() => console.log(`✓ Record synced to Firebase Realtime DB "${firestoreCollName}" ID: ${newItem.id}`))
-          .catch(e => console.warn(`Firebase Realtime DB sync notice:`, e.message));
+        if (realtimeDb) {
+          realtimeDb.ref(`${firestoreCollName}/${newItem.id}`).set(newItem)
+            .then(() => console.log(`✓ Record synced to Firebase Realtime DB "${firestoreCollName}" ID: ${newItem.id}`))
+            .catch(e => console.warn(`Firebase Realtime DB sync notice:`, e.message));
+        }
       }
     } catch (e) {
       // Graceful fallback
@@ -138,21 +150,23 @@ export const db = {
 
     // Async Update in Firebase
     try {
-      const { firestoreDb, realtimeDb } = initFirebase();
+      const { firestoreDb, realtimeDb, isFirebaseInitialized } = initFirebase();
       const firestoreCollName = FIRESTORE_COLLECTION_MAP[collectionName] || collectionName;
 
-      if (firestoreDb) {
-        firestoreDb.collection(firestoreCollName).doc(id).update({
-          ...updates,
-          updatedAt: new Date().toISOString()
-        }).catch(e => console.warn(`Firebase Firestore update notice:`, e.message));
-      }
+      if (isFirebaseInitialized && hasFirebaseCredentials()) {
+        if (firestoreDb) {
+          firestoreDb.collection(firestoreCollName).doc(id).update({
+            ...updates,
+            updatedAt: new Date().toISOString()
+          }).catch(e => console.warn(`Firebase Firestore update notice:`, e.message));
+        }
 
-      if (realtimeDb) {
-        realtimeDb.ref(`${firestoreCollName}/${id}`).update({
-          ...updates,
-          updatedAt: new Date().toISOString()
-        }).catch(e => console.warn(`Firebase Realtime DB update notice:`, e.message));
+        if (realtimeDb) {
+          realtimeDb.ref(`${firestoreCollName}/${id}`).update({
+            ...updates,
+            updatedAt: new Date().toISOString()
+          }).catch(e => console.warn(`Firebase Realtime DB update notice:`, e.message));
+        }
       }
     } catch (e) {}
 
@@ -168,17 +182,19 @@ export const db = {
 
     // Async Delete in Firebase
     try {
-      const { firestoreDb, realtimeDb } = initFirebase();
+      const { firestoreDb, realtimeDb, isFirebaseInitialized } = initFirebase();
       const firestoreCollName = FIRESTORE_COLLECTION_MAP[collectionName] || collectionName;
 
-      if (firestoreDb) {
-        firestoreDb.collection(firestoreCollName).doc(id).delete()
-          .catch(e => console.warn(`Firebase Firestore delete notice:`, e.message));
-      }
+      if (isFirebaseInitialized && hasFirebaseCredentials()) {
+        if (firestoreDb) {
+          firestoreDb.collection(firestoreCollName).doc(id).delete()
+            .catch(e => console.warn(`Firebase Firestore delete notice:`, e.message));
+        }
 
-      if (realtimeDb) {
-        realtimeDb.ref(`${firestoreCollName}/${id}`).remove()
-          .catch(e => console.warn(`Firebase Realtime DB delete notice:`, e.message));
+        if (realtimeDb) {
+          realtimeDb.ref(`${firestoreCollName}/${id}`).remove()
+            .catch(e => console.warn(`Firebase Realtime DB delete notice:`, e.message));
+        }
       }
     } catch (e) {}
 

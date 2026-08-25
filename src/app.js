@@ -22,6 +22,11 @@ import reviewsRoutes from './routes/reviewsRoutes.js';
 import nielitRoutes from './routes/nielitRoutes.js';
 import eventsRoutes from './routes/eventsRoutes.js';
 import coursesRoutes from './routes/coursesRoutes.js';
+import internshipsRoutes from './routes/internshipsRoutes.js';
+import certificatesRoutes from './routes/certificatesRoutes.js';
+import feesRoutes from './routes/feesRoutes.js';
+import facultyRoutes from './routes/facultyRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
@@ -60,7 +65,7 @@ try {
   console.warn('Swagger UI initialization warning:', e.message);
 }
 
-// API Routes Mounting
+// API Routes Mounting - Full IT HUNT Enterprise Suite
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authRoutes);
@@ -71,6 +76,11 @@ app.use('/api/reviews', reviewsRoutes);
 app.use('/api/nielit-projects', nielitRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/courses', coursesRoutes);
+app.use('/api/internships', internshipsRoutes);
+app.use('/api/certificates', certificatesRoutes);
+app.use('/api/fees', feesRoutes);
+app.use('/api/faculty', facultyRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 

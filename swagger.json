@@ -288,6 +288,150 @@
           "200": { "description": "Dashboard stats" }
         }
       }
+    },
+    "/api/admin/firebase/collections/{collection}": {
+      "get": {
+        "summary": "Fetch full collection details directly from Firebase Firestore / Cloud Storage",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "collection", "in": "path", "required": true, "schema": { "type": "string" }, "example": "students" }
+        ],
+        "responses": {
+          "200": { "description": "Collection records fetched from Firebase Firestore" }
+        }
+      }
+    },
+    "/api/admin/firebase/collections/{collection}/{id}": {
+      "get": {
+        "summary": "Fetch specific document detail from Firebase Firestore",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "collection", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Document detail fetched from Firebase Firestore" }
+        }
+      }
+    },
+    "/api/admin/firebase/storage/files": {
+      "get": {
+        "summary": "List files from Firebase Cloud Storage bucket",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of files in Firebase Storage" }
+        }
+      }
+    },
+    "/api/certificates/verify/{certNo}": {
+      "get": {
+        "summary": "Public Verification of Official Student Certificate",
+        "parameters": [
+          { "name": "certNo", "in": "path", "required": true, "schema": { "type": "string" }, "example": "ITH-CERT-2026-0001" }
+        ],
+        "responses": {
+          "200": { "description": "Certificate authenticity details" }
+        }
+      }
+    },
+    "/api/certificates": {
+      "get": {
+        "summary": "List all student certificates",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of issued certificates" }
+        }
+      },
+      "post": {
+        "summary": "Issue a new official student certificate",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "studentName": { "type": "string" },
+                  "enrollmentNumber": { "type": "string" },
+                  "courseName": { "type": "string" },
+                  "grade": { "type": "string" },
+                  "duration": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Certificate issued successfully" }
+        }
+      }
+    },
+    "/api/fees/record": {
+      "post": {
+        "summary": "Record a student fee payment & issue receipt",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "studentName": { "type": "string" },
+                  "enrollmentNumber": { "type": "string" },
+                  "courseName": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "paymentMode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Fee receipt generated" }
+        }
+      }
+    },
+    "/api/faculty": {
+      "get": {
+        "summary": "Get official faculty and mentor directory",
+        "responses": {
+          "200": { "description": "Faculty directory list" }
+        }
+      },
+      "post": {
+        "summary": "Register a new faculty member",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Faculty registered" }
+        }
+      }
+    },
+    "/api/attendance/mark": {
+      "post": {
+        "summary": "Mark student daily attendance",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Attendance logged" }
+        }
+      }
+    },
+    "/api/internships": {
+      "get": {
+        "summary": "List available software internship tracks",
+        "responses": {
+          "200": { "description": "Internships list" }
+        }
+      }
+    },
+    "/api/internships/apply": {
+      "post": {
+        "summary": "Apply for software internship",
+        "responses": {
+          "201": { "description": "Application submitted" }
+        }
+      }
     }
   }
 }

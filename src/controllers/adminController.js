@@ -1,11 +1,19 @@
 import db from '../config/db.js';
-import { successResponse } from '../utils/helpers.js';
+import { successResponse, errorResponse } from '../utils/helpers.js';
+import {
+  fetchCollectionFromFirestore,
+  fetchDocumentFromFirestore,
+  fetchFromRealtimeDB,
+  fetchFilesFromStorage,
+  firestoreDb
+} from '../config/firebase.js';
 
 export function getDashboardStats(req, res) {
   const admissions = db.getCollection('admissions');
   const careers = db.getCollection('careers');
   const reviews = db.getCollection('reviews');
   const users = db.getCollection('users');
+  const students = db.getCollection('students');
   const nielit = db.getCollection('nielitProjects');
   const events = db.getCollection('events');
 
@@ -14,7 +22,7 @@ export function getDashboardStats(req, res) {
     provisionallyAdmitted: admissions.filter(a => a.status === 'PROVISIONALLY ADMITTED').length,
     pendingJobApplications: careers.filter(c => c.status === 'PENDING_REVIEW').length,
     totalJobApplications: careers.length,
-    totalRegisteredStudents: users.filter(u => u.role === 'student').length,
+    totalRegisteredStudents: students.length || users.filter(u => u.role === 'student').length,
     totalReviews: reviews.length,
     verifiedReviews: reviews.filter(r => r.verified).length,
     nielitProjectsSubmitted: nielit.length,
@@ -24,3 +32,118 @@ export function getDashboardStats(req, res) {
 
   return successResponse(res, 'SuperAdmin dashboard executive statistics generated', { stats });
 }
+
+/**
+ * Fetch detail collection directly from Firebase Firestore / local fallback
+ */
+export async function getFirebaseCollectionData(req, res) {
+  try {
+    const { collection } = req.params;
+
+    if (!collection) {
+      return errorResponse(res, 'Collection name parameter is required', 400);
+    }
+
+    let records = [];
+    let source = 'firebase_firestore';
+
+    try {
+      if (firestoreDb) {
+        records = await fetchCollectionFromFirestore(collection);
+      } else {
+        throw new Error('Firestore not initialized');
+      }
+    } catch (firestoreErr) {
+      // Graceful fallback to local adapter collection
+      source = 'local_storage_cache';
+      records = db.getCollection(collection);
+    }
+
+    return successResponse(res, `Collection "${collection}" fetched successfully from ${source}`, {
+      collection,
+      source,
+      count: records.length,
+      data: records
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}
+
+/**
+ * Fetch a single document detail from Firebase Firestore
+ */
+export async function getFirebaseDocumentData(req, res) {
+  try {
+    const { collection, id } = req.params;
+
+    let document = null;
+    let source = 'firebase_firestore';
+
+    try {
+      if (firestoreDb) {
+        document = await fetchDocumentFromFirestore(collection, id);
+      } else {
+        throw new Error('Firestore not initialized');
+      }
+    } catch (firestoreErr) {
+      source = 'local_storage_cache';
+      document = db.findById(collection, id);
+    }
+
+    if (!document) {
+      return errorResponse(res, `Document "${id}" not found in collection "${collection}"`, 404);
+    }
+
+    return successResponse(res, `Document fetched successfully from ${source}`, {
+      collection,
+      id,
+      source,
+      data: document
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}
+
+/**
+ * Fetch file metadata list from Firebase Cloud Storage
+ */
+export async function getFirebaseStorageFiles(req, res) {
+  try {
+    const { prefix } = req.query;
+
+    try {
+      const files = await fetchFilesFromStorage(prefix || '');
+      return successResponse(res, 'Firebase Storage files retrieved successfully', {
+        files,
+        totalCount: files.length
+      });
+    } catch (storageErr) {
+      return successResponse(res, 'Firebase Storage bucket connection status', {
+        files: [],
+        totalCount: 0,
+        notice: storageErr.message
+      });
+    }
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}
+
+/**
+ * Fetch and sync data from Firebase Realtime DB
+ */
+export async function getRealtimeDBData(req, res) {
+  try {
+    const path = req.query.path || '';
+    const data = await fetchFromRealtimeDB(path);
+    return successResponse(res, `Firebase Realtime DB data for path "${path}" fetched successfully`, {
+      path,
+      data
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}
+

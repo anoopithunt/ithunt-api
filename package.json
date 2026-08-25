@@ -9,6 +9,9 @@
     "dev": "nodemon src/server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --forceExit"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "keywords": [
     "ithunt",
     "express",

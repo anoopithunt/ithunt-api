@@ -26,5 +26,7 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'faculty'), 
 router.patch('/:id/status', authenticate, authorize('admin', 'superadmin', 'faculty'), updateProjectStatus);
 router.put('/:id/status', authenticate, authorize('admin', 'superadmin', 'faculty'), updateProjectStatus);
 router.delete('/:id', authenticate, authorize('admin', 'superadmin'), deleteProject);
+router.delete('/', authenticate, authorize('admin', 'superadmin'), deleteProject);
+router.post('/delete/:id', authenticate, authorize('admin', 'superadmin'), deleteProject);
 
 export default router;

@@ -282,23 +282,34 @@ export function updateProjectStatus(req, res) {
 }
 
 /**
- * Delete a project
+ * Delete a project (Supports params :id, request body id/projectId, or query id)
  */
 export function deleteProject(req, res) {
   try {
-    const { id } = req.params;
-    const existing = db.findById('projects', id) || 
-                     db.findOne('projects', p => p.slug === id || p.title.toLowerCase().replace(/\s+/g, '-') === id);
+    const targetId = req.params.id || req.body?.id || req.body?.projectId || req.query?.id || req.query?.projectId;
+
+    if (!targetId) {
+      return errorResponse(res, 'Project ID or slug is required for deletion', 400);
+    }
+
+    const existing = db.findById('projects', targetId) || 
+                     db.findOne('projects', p => 
+                       p.id === targetId || 
+                       p.slug === targetId || 
+                       p.title.toLowerCase().replace(/\s+/g, '-') === targetId.toLowerCase() ||
+                       p.title.toLowerCase() === targetId.toLowerCase()
+                     );
 
     if (!existing) {
       return errorResponse(res, 'Project not found', 404);
     }
 
-    db.deleteById('projects', existing.id);
+    const deleted = db.deleteById('projects', existing.id);
 
     return successResponse(res, 'Project deleted successfully from database & Firebase Realtime DB / Firestore', {
       deletedProjectId: existing.id,
-      title: existing.title
+      title: existing.title,
+      slug: existing.slug
     });
   } catch (error) {
     return errorResponse(res, error.message, 500);

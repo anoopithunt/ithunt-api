@@ -114,8 +114,18 @@ export function updateNielitProjectStatus(req, res) {
 
 export function deleteNielitProject(req, res) {
   try {
-    const { id } = req.params;
-    const project = db.findById('nielitProjects', id) || db.findOne('nielitProjects', p => p.regNo === id || p.id === id);
+    const targetId = req.params.id || req.body?.id || req.body?.projectId || req.query?.id || req.query?.projectId || req.body?.regNo;
+
+    if (!targetId) {
+      return errorResponse(res, 'Project ID or Registration Number is required for deletion', 400);
+    }
+
+    const project = db.findById('nielitProjects', targetId) || 
+                    db.findOne('nielitProjects', p => 
+                      p.id === targetId || 
+                      p.regNo === targetId || 
+                      (p.projectTitle && p.projectTitle.toLowerCase() === targetId.toLowerCase())
+                    );
 
     if (!project) {
       return errorResponse(res, 'NIELIT Project record not found', 404);

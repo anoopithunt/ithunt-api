@@ -2,20 +2,26 @@ import bcrypt from 'bcryptjs';
 import { db } from '../config/db.js';
 
 export async function seedInitialData() {
-  // Seed SuperAdmin if not exists
-  const existingAdmin = db.findOne('users', u => u.role === 'superadmin' || u.email === 'admin@ithunt.com');
+  // Seed SuperAdmin if not exists or sync credentials
+  const existingAdmin = db.findOne('users', u => u.role === 'superadmin' || u.id === 'admin-001');
+  const hashedPassword = await bcrypt.hash('admin@ithunt2026', 10);
+
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('admin@ithunt2026', 10);
     db.insert('users', {
       id: 'admin-001',
       name: 'Lakshman Singh Chauhan',
-      email: [EMAIL_ADDRESS],
+      email: 'admin@ithunt.com',
       password: hashedPassword,
       role: 'superadmin',
       designation: 'Director & Founder',
       phone: '+919795771806'
     });
-    console.log('✓ Default SuperAdmin account created ([EMAIL_ADDRESS] / admin@ithunt2026)');
+    console.log('✓ Default SuperAdmin account created (admin@ithunt.com / admin@ithunt2026)');
+  } else {
+    db.updateById('users', existingAdmin.id, {
+      email: 'admin@ithunt.com',
+      password: hashedPassword
+    });
   }
 
   // Seed Default Courses if empty

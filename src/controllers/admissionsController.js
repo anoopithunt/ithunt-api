@@ -101,10 +101,29 @@ export function updateAdmissionStatus(req, res) {
 }
 
 export function deleteAdmission(req, res) {
-  const { id } = req.params;
-  const deleted = db.deleteById('admissions', id);
-  if (!deleted) {
-    return errorResponse(res, 'Admission record not found', 404);
+  try {
+    const { id } = req.params;
+    const admission = db.findById('admissions', id) || db.findOne('admissions', a => 
+      a.id === id || 
+      a.registrationNumber === id ||
+      a.registrationNo === id
+    );
+
+    if (!admission) {
+      return errorResponse(res, 'Admission record not found', 404);
+    }
+
+    const deleted = db.deleteById('admissions', admission.id);
+    if (!deleted) {
+      return errorResponse(res, 'Admission record could not be deleted', 500);
+    }
+
+    return successResponse(res, 'Admission record deleted successfully from database & Firebase', {
+      deletedId: admission.id,
+      registrationNumber: admission.registrationNumber || admission.registrationNo,
+      fullName: admission.fullName
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
   }
-  return successResponse(res, 'Admission record deleted successfully');
 }

@@ -24,7 +24,7 @@ describe('IT HUNT Backend REST API Suite', () => {
     const res = await request(app)
       .post('/api/auth/login')
       .send({
-        email: [EMAIL_ADDRESS],
+        email: 'admin@ithunt.com',
         password: 'admin@ithunt2026'
       });
     
@@ -81,6 +81,16 @@ describe('IT HUNT Backend REST API Suite', () => {
     const res = await request(app).get(`/api/admissions/${admissionId}/slip`);
     expect(res.statusCode).toEqual(200);
     expect(res.body.data.registrationSlip.candidateName).toEqual('Aarav Sharma');
+  });
+
+  test('DELETE /api/admissions/:id - Delete Admission Record (Admin)', async () => {
+    const delRes = await request(app)
+      .delete(`/api/admissions/${admissionId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(delRes.statusCode).toEqual(200);
+    expect(delRes.body.success).toBe(true);
+    expect(delRes.body.data.deletedId).toEqual(admissionId);
   });
 
   test('POST /api/careers/apply - Submit Job Application', async () => {

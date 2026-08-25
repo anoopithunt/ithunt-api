@@ -225,6 +225,28 @@
         }
       }
     },
+    "/api/admissions/{id}": {
+      "get": {
+        "summary": "Get admission details by ID or registration number",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Admission details" }
+        }
+      },
+      "delete": {
+        "summary": "Delete an admission record (Admin / SuperAdmin required)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Admission record deleted successfully" },
+          "404": { "description": "Admission record not found" }
+        }
+      }
+    },
     "/api/careers/apply": {
       "post": {
         "summary": "Submit job or faculty application",

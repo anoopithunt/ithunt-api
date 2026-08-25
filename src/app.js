@@ -47,7 +47,7 @@ app.use(helmet({
 
 const allowedOrigins = [
   'https://ithunt.vercel.app',
-  'https://ithunt.in',
+  'https://ithunt.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:8080'

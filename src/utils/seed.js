@@ -3,19 +3,19 @@ import { db } from '../config/db.js';
 
 export async function seedInitialData() {
   // Seed SuperAdmin if not exists
-  const existingAdmin = db.findOne('users', u => u.role === 'superadmin' || u.email === 'admin@ithunt.in');
+  const existingAdmin = db.findOne('users', u => u.role === 'superadmin' || u.email === 'admin@ithunt.com');
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('Admin@12345', 10);
+    const hashedPassword = await bcrypt.hash('admin@ithunt2026', 10);
     db.insert('users', {
       id: 'admin-001',
       name: 'Lakshman Singh Chauhan',
-      email: 'admin@ithunt.in',
+      email: [EMAIL_ADDRESS],
       password: hashedPassword,
       role: 'superadmin',
       designation: 'Director & Founder',
       phone: '+919795771806'
     });
-    console.log('✓ Default SuperAdmin account created (admin@ithunt.in / Admin@12345)');
+    console.log('✓ Default SuperAdmin account created ([EMAIL_ADDRESS] / admin@ithunt2026)');
   }
 
   // Seed Default Courses if empty

@@ -24,8 +24,8 @@ describe('IT HUNT Backend REST API Suite', () => {
     const res = await request(app)
       .post('/api/auth/login')
       .send({
-        email: 'admin@ithunt.in',
-        password: 'Admin@12345'
+        email: [EMAIL_ADDRESS],
+        password: 'admin@ithunt2026'
       });
     
     expect(res.statusCode).toEqual(200);
@@ -135,7 +135,7 @@ describe('IT HUNT Backend REST API Suite', () => {
   });
 
   test('POST /api/students/register & POST /api/students/login - Distinct Auth & Student Details Storage', async () => {
-    const testEmail = `student_full_${Date.now()}@ithunt.in`;
+    const testEmail = `student_full_${Date.now()}@ithunt.vercel.app`;
     const regRes = await request(app)
       .post('/api/students/register')
       .send({
@@ -292,7 +292,7 @@ describe('IT HUNT Backend REST API Suite', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         name: 'Dr. Vivek Pandey',
-        email: `faculty_${Date.now()}@ithunt.in`,
+        email: `faculty_${Date.now()}@ithunt.vercel.app`,
         phone: '+919876541122',
         designation: 'Senior Faculty & Python AI Lead'
       });

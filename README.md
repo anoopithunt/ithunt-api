@@ -46,8 +46,8 @@ npm test
 ## 📑 Default SuperAdmin Credentials
 
 Upon first launch, the database automatically seeds a SuperAdmin director account:
-- **Email**: `admin@ithunt.in`
-- **Password**: `Admin@12345`
+- **Email**: `[EMAIL_ADDRESS]`
+- **Password**: `admin@ithunt2026`
 
 ---
 

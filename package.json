@@ -33,7 +33,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^10.0.0"
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "jest": "^29.7.0",

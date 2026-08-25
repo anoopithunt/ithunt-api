@@ -100,6 +100,7 @@ app.use('/api/admissions', admissionsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/nielit-projects', nielitRoutes);
+app.use('/api/nielitProjects', nielitRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/internships', internshipsRoutes);

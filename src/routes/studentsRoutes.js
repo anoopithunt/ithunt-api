@@ -21,10 +21,12 @@ router.post('/login', loginStudent);
 router.get('/me', authenticate, getStudentProfile);
 router.put('/me', authenticate, updateStudentProfile);
 
+// Student Directory & Profile Routes (Public & Authenticated)
+router.get('/', getAllStudents);
+router.get('/:id', getStudentById);
+
 // Admin & Faculty Management Routes
-router.get('/', authenticate, authorize('admin', 'superadmin', 'faculty'), getAllStudents);
-router.get('/:id', authenticate, getStudentById);
-router.put('/:id', authenticate, authorize('admin', 'superadmin'), updateStudentById);
+router.put('/:id', authenticate, authorize('admin', 'superadmin', 'faculty'), updateStudentById);
 router.delete('/:id', authenticate, authorize('admin', 'superadmin'), deleteStudent);
 
 export default router;

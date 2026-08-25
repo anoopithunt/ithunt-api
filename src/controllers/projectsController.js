@@ -221,7 +221,8 @@ export function submitStudentProject(req, res) {
 export function updateProject(req, res) {
   try {
     const { id } = req.params;
-    const existing = db.findById('projects', id);
+    const existing = db.findById('projects', id) || 
+                     db.findOne('projects', p => p.slug === id || p.title.toLowerCase().replace(/\s+/g, '-') === id);
 
     if (!existing) {
       return errorResponse(res, 'Project not found', 404);
@@ -232,9 +233,47 @@ export function updateProject(req, res) {
       updates.techStack = updates.techStack.split(',').map(s => s.trim());
     }
 
-    const updated = db.updateById('projects', id, updates);
+    if (updates.studentId) {
+      const student = db.findById('students', updates.studentId) || db.findOne('students', s => s.userId === updates.studentId || s.enrollmentNumber === updates.studentId);
+      if (student) {
+        updates.studentId = student.id;
+        updates.authorName = updates.authorName || student.name;
+        updates.authorEmail = updates.authorEmail || student.email;
+      }
+    }
 
-    return successResponse(res, 'Project updated and synced to Firebase', {
+    const updated = db.updateById('projects', existing.id, updates);
+
+    return successResponse(res, 'Project updated successfully and synced to Firebase', {
+      project: enrichProjectWithStudent(updated)
+    });
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+}
+
+/**
+ * Fast status update shortcut (Approve / Reject / Feature)
+ */
+export function updateProjectStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const { status, featured } = req.body;
+
+    const existing = db.findById('projects', id) || 
+                     db.findOne('projects', p => p.slug === id || p.title.toLowerCase().replace(/\s+/g, '-') === id);
+
+    if (!existing) {
+      return errorResponse(res, 'Project not found', 404);
+    }
+
+    const updates = {};
+    if (status) updates.status = status.toUpperCase();
+    if (featured !== undefined) updates.featured = Boolean(featured);
+
+    const updated = db.updateById('projects', existing.id, updates);
+
+    return successResponse(res, `Project status updated to ${updated.status} and synced to Firebase`, {
       project: enrichProjectWithStudent(updated)
     });
   } catch (error) {
@@ -248,16 +287,17 @@ export function updateProject(req, res) {
 export function deleteProject(req, res) {
   try {
     const { id } = req.params;
-    const existing = db.findById('projects', id);
+    const existing = db.findById('projects', id) || 
+                     db.findOne('projects', p => p.slug === id || p.title.toLowerCase().replace(/\s+/g, '-') === id);
 
     if (!existing) {
       return errorResponse(res, 'Project not found', 404);
     }
 
-    db.deleteById('projects', id);
+    db.deleteById('projects', existing.id);
 
-    return successResponse(res, 'Project deleted successfully from database & Firebase', {
-      deletedProjectId: id,
+    return successResponse(res, 'Project deleted successfully from database & Firebase Realtime DB / Firestore', {
+      deletedProjectId: existing.id,
       title: existing.title
     });
   } catch (error) {

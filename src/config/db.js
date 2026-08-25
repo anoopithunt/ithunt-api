@@ -125,12 +125,20 @@ export const db = {
           firestoreDb.collection(firestoreCollName).doc(newItem.id).set(newItem)
             .then(() => console.log(`✓ Record saved to Firebase Firestore collection "${firestoreCollName}" ID: ${newItem.id}`))
             .catch(e => console.warn(`Firebase Firestore save notice (${firestoreCollName}):`, e.message));
+
+          if (firestoreCollName !== collectionName) {
+            firestoreDb.collection(collectionName).doc(newItem.id).set(newItem).catch(() => {});
+          }
         }
 
         if (realtimeDb) {
           realtimeDb.ref(`${firestoreCollName}/${newItem.id}`).set(newItem)
             .then(() => console.log(`✓ Record synced to Firebase Realtime DB "${firestoreCollName}" ID: ${newItem.id}`))
             .catch(e => console.warn(`Firebase Realtime DB sync notice:`, e.message));
+
+          if (firestoreCollName !== collectionName) {
+            realtimeDb.ref(`${collectionName}/${newItem.id}`).set(newItem).catch(() => {});
+          }
         }
       } else if (config.firebaseDatabaseUrl) {
         // Fallback to Firebase Realtime DB REST API
@@ -143,6 +151,14 @@ export const db = {
             console.log(`✓ Record synced to Firebase Realtime DB via REST "${firestoreCollName}" ID: ${newItem.id}`);
           }
         }).catch(() => {});
+
+        if (firestoreCollName !== collectionName) {
+          fetch(`${config.firebaseDatabaseUrl}/${collectionName}/${newItem.id}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newItem)
+          }).catch(() => {});
+        }
       }
     } catch (e) {
       // Graceful fallback
@@ -173,6 +189,13 @@ export const db = {
             ...updates,
             updatedAt: new Date().toISOString()
           }, { merge: true }).catch(e => console.warn(`Firebase Firestore update notice:`, e.message));
+
+          if (firestoreCollName !== collectionName) {
+            firestoreDb.collection(collectionName).doc(id).set({
+              ...updates,
+              updatedAt: new Date().toISOString()
+            }, { merge: true }).catch(() => {});
+          }
         }
 
         if (realtimeDb) {
@@ -180,6 +203,13 @@ export const db = {
             ...updates,
             updatedAt: new Date().toISOString()
           }).catch(e => console.warn(`Firebase Realtime DB update notice:`, e.message));
+
+          if (firestoreCollName !== collectionName) {
+            realtimeDb.ref(`${collectionName}/${id}`).update({
+              ...updates,
+              updatedAt: new Date().toISOString()
+            }).catch(() => {});
+          }
         }
       } else if (config.firebaseDatabaseUrl) {
         fetch(`${config.firebaseDatabaseUrl}/${firestoreCollName}/${id}.json`, {
@@ -187,6 +217,14 @@ export const db = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...updates, updatedAt: new Date().toISOString() })
         }).catch(() => {});
+
+        if (firestoreCollName !== collectionName) {
+          fetch(`${config.firebaseDatabaseUrl}/${collectionName}/${id}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...updates, updatedAt: new Date().toISOString() })
+          }).catch(() => {});
+        }
       }
     } catch (e) {}
 
@@ -197,7 +235,7 @@ export const db = {
     const coll = this.getCollection(collectionName);
     const index = coll.findIndex(item => item.id === id);
     if (index === -1) return false;
-    coll.splice(index, 1);
+    const removedItem = coll.splice(index, 1)[0];
     saveDB();
 
     // Async Delete in Firebase
@@ -208,17 +246,52 @@ export const db = {
       if (isFirebaseInitialized && hasFirebaseCredentials()) {
         if (firestoreDb) {
           firestoreDb.collection(firestoreCollName).doc(id).delete()
+            .then(() => console.log(`✓ Record deleted from Firebase Firestore collection "${firestoreCollName}" ID: ${id}`))
             .catch(e => console.warn(`Firebase Firestore delete notice:`, e.message));
+
+          if (firestoreCollName !== collectionName) {
+            firestoreDb.collection(collectionName).doc(id).delete().catch(() => {});
+          }
+
+          // If item has regNo or enrollmentNumber or slug, also attempt cleanup
+          if (removedItem?.regNo) {
+            firestoreDb.collection(firestoreCollName).doc(removedItem.regNo).delete().catch(() => {});
+            firestoreDb.collection(collectionName).doc(removedItem.regNo).delete().catch(() => {});
+          }
+          if (removedItem?.enrollmentNumber) {
+            firestoreDb.collection(firestoreCollName).doc(removedItem.enrollmentNumber).delete().catch(() => {});
+            firestoreDb.collection(collectionName).doc(removedItem.enrollmentNumber).delete().catch(() => {});
+          }
         }
 
         if (realtimeDb) {
           realtimeDb.ref(`${firestoreCollName}/${id}`).remove()
+            .then(() => console.log(`✓ Record removed from Firebase Realtime DB "${firestoreCollName}" ID: ${id}`))
             .catch(e => console.warn(`Firebase Realtime DB delete notice:`, e.message));
+
+          if (firestoreCollName !== collectionName) {
+            realtimeDb.ref(`${collectionName}/${id}`).remove().catch(() => {});
+          }
+
+          if (removedItem?.regNo) {
+            realtimeDb.ref(`${firestoreCollName}/${removedItem.regNo}`).remove().catch(() => {});
+            realtimeDb.ref(`${collectionName}/${removedItem.regNo}`).remove().catch(() => {});
+          }
+          if (removedItem?.enrollmentNumber) {
+            realtimeDb.ref(`${firestoreCollName}/${removedItem.enrollmentNumber}`).remove().catch(() => {});
+            realtimeDb.ref(`${collectionName}/${removedItem.enrollmentNumber}`).remove().catch(() => {});
+          }
         }
       } else if (config.firebaseDatabaseUrl) {
         fetch(`${config.firebaseDatabaseUrl}/${firestoreCollName}/${id}.json`, {
           method: 'DELETE'
         }).catch(() => {});
+
+        if (firestoreCollName !== collectionName) {
+          fetch(`${config.firebaseDatabaseUrl}/${collectionName}/${id}.json`, {
+            method: 'DELETE'
+          }).catch(() => {});
+        }
       }
     } catch (e) {}
 

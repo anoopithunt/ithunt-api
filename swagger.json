@@ -454,6 +454,71 @@
           "201": { "description": "Application submitted" }
         }
       }
+    },
+    "/api/projects": {
+      "get": {
+        "summary": "List all showcase and student projects (Supports filter by category, tech, featured)",
+        "responses": {
+          "200": { "description": "Projects list" }
+        }
+      },
+      "post": {
+        "summary": "Create an official or student showcase project (Admin/Faculty)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Project created and synced to Firebase" }
+        }
+      }
+    },
+    "/api/projects/submit": {
+      "post": {
+        "summary": "Submit capstone or NIELIT project for review (Public/Student)",
+        "responses": {
+          "201": { "description": "Project submission received and saved to Firebase" }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "get": {
+        "summary": "Get project details by ID or slug with full student relationship",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Project details" }
+        }
+      },
+      "put": {
+        "summary": "Update project details (Admin/Faculty)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Project updated" }
+        }
+      },
+      "delete": {
+        "summary": "Delete project (Admin/SuperAdmin)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Project deleted from DB & Firebase" }
+        }
+      }
+    },
+    "/api/projects/student/{studentId}": {
+      "get": {
+        "summary": "Get all projects submitted by a specific student",
+        "parameters": [
+          { "name": "studentId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Student's project list" }
+        }
+      }
     }
   }
 }

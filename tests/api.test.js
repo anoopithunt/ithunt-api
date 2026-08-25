@@ -357,4 +357,58 @@ describe('IT HUNT Backend REST API Suite', () => {
     expect(applyRes.body.data.application.status).toEqual('PENDING_REVIEW');
   });
 
+  test('POST /api/projects & GET /api/projects - Projects API with Firebase Sync and Student Relation', async () => {
+    // 1. Create project by Admin
+    const createRes = await request(app)
+      .post('/api/projects')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Smart Agro IoT & Weather Station',
+        category: "Python IoT & AI",
+        description: 'Real-time soil moisture and environmental parameter monitoring system.',
+        techStack: ['Python', 'Raspberry Pi', 'Flask', 'React', 'MQTT'],
+        githubUrl: 'https://github.com/ithunt/smart-agro-iot',
+        studentId: 'stu-test-101',
+        guideName: 'Mr. Lakshman Singh Chauhan',
+        featured: true
+      });
+
+    expect(createRes.statusCode).toEqual(201);
+    expect(createRes.body.success).toBe(true);
+    const createdProjectId = createRes.body.data.project.id;
+
+    // 2. Fetch all projects
+    const listRes = await request(app).get('/api/projects');
+    expect(listRes.statusCode).toEqual(200);
+    expect(listRes.body.data.projects.length).toBeGreaterThanOrEqual(1);
+
+    // 3. Fetch project details by ID with student relationship
+    const detailRes = await request(app).get(`/api/projects/${createdProjectId}`);
+    expect(detailRes.statusCode).toEqual(200);
+    expect(detailRes.body.data.project.title).toEqual('Smart Agro IoT & Weather Station');
+
+    // 4. Student Capstone Project Submission
+    const submitRes = await request(app)
+      .post('/api/projects/submit')
+      .send({
+        title: 'Library Automation & Barcode Management',
+        category: "NIELIT 'O' Level Major Project",
+        description: 'Automated book issue/return tracking system with barcode integration.',
+        authorName: 'Rohan Gupta',
+        authorEmail: 'rohan.gupta@example.com',
+        techStack: ['JavaScript', 'HTML5', 'CSS3']
+      });
+
+    expect(submitRes.statusCode).toEqual(201);
+    expect(submitRes.body.data.submission.status).toEqual('UNDER_REVIEW');
+
+    // 5. Delete project
+    const delRes = await request(app)
+      .delete(`/api/projects/${createdProjectId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(delRes.statusCode).toEqual(200);
+    expect(delRes.body.success).toBe(true);
+  });
+
 });

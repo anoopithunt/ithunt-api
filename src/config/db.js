@@ -26,7 +26,8 @@ const FIRESTORE_COLLECTION_MAP = {
   fees: 'fees_payments',
   faculty: 'faculty_members',
   attendance: 'attendance_records',
-  contacts: 'contacts'
+  contacts: 'contacts',
+  projects: 'projects'
 };
 
 // Memory cache of DB tables
@@ -45,7 +46,8 @@ let dbState = {
   fees: [],
   faculty: [],
   attendance: [],
-  contacts: []
+  contacts: [],
+  projects: []
 };
 
 // Initialize persistent file store & Firebase

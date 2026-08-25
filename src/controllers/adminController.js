@@ -187,7 +187,8 @@ export async function pushAllDataToFirebase(req, res) {
       'contacts',
       'nielitProjects',
       'events',
-      'careers'
+      'careers',
+      'projects'
     ];
 
     const results = {};

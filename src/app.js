@@ -29,6 +29,7 @@ import facultyRoutes from './routes/facultyRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import projectsRoutes from './routes/projectsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,6 +109,7 @@ app.use('/api/faculty', facultyRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/projects', projectsRoutes);
 
 // Root Endpoint Redirect/Summary
 app.get('/', (req, res) => {

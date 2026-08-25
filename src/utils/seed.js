@@ -126,4 +126,67 @@ export async function seedInitialData() {
     defaultReviews.forEach(r => db.insert('reviews', r));
     console.log('✓ Default student reviews seeded');
   }
+
+  // Seed Default Projects if empty
+  const projects = db.getCollection('projects');
+  if (projects.length === 0) {
+    const defaultProjects = [
+      {
+        id: 'proj-101',
+        title: 'Smart Healthcare & Hospital Management ERP',
+        slug: 'smart-healthcare-hospital-erp',
+        category: 'Full Stack MERN Stack',
+        description: 'Complete inpatient & outpatient medical record management system with automated billing and doctor appointments.',
+        techStack: ['React', 'Node.js', 'Express', 'MongoDB', 'Firebase Auth', 'TailwindCSS'],
+        githubUrl: 'https://github.com/anoopithunt/hospital-management-erp',
+        liveUrl: 'https://hospital-erp-ithunt.vercel.app',
+        thumbnail: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=60',
+        studentId: 'stu-test-101',
+        authorName: 'Anoop Mishra',
+        guideName: 'Mr. Lakshman Singh Chauhan',
+        academicYear: '2025-2026',
+        featured: true,
+        status: 'APPROVED',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'proj-102',
+        title: 'AI Crop Disease Detection & Fertilizer Advisor',
+        slug: 'ai-crop-disease-detection',
+        category: 'Python AI & Computer Vision',
+        description: 'Deep Learning Convolutional Neural Network (CNN) model predicting leaf diseases with treatment suggestions for farmers.',
+        techStack: ['Python', 'TensorFlow', 'OpenCV', 'Flask', 'Chart.js'],
+        githubUrl: 'https://github.com/anoopithunt/ai-crop-disease',
+        liveUrl: 'https://crop-ai-ithunt.vercel.app',
+        thumbnail: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&auto=format&fit=crop&q=60',
+        studentId: null,
+        authorName: 'Saurabh Patel & IT HUNT AI Batch',
+        guideName: 'Mr. Lakshman Singh Chauhan',
+        academicYear: '2025-2026',
+        featured: true,
+        status: 'APPROVED',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'proj-103',
+        title: 'NIELIT Online Student Portal & Attendance Tracker',
+        slug: 'nielit-student-portal-attendance',
+        category: "NIELIT 'O' Level Major Project",
+        description: 'Automated student examination result checking, digital ID card generator, and biometric class attendance viewer.',
+        techStack: ['JavaScript', 'HTML5', 'CSS3', 'Firebase Realtime DB', 'Express API'],
+        githubUrl: 'https://github.com/anoopithunt/nielit-student-portal',
+        liveUrl: 'https://nielit-portal-ithunt.vercel.app',
+        thumbnail: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=60',
+        studentId: null,
+        authorName: 'Kavita Singh',
+        guideName: 'Mr. Lakshman Singh Chauhan',
+        academicYear: '2025-2026',
+        featured: false,
+        status: 'APPROVED',
+        createdAt: new Date().toISOString()
+      }
+    ];
+    defaultProjects.forEach(p => db.insert('projects', p));
+    console.log('✓ Default showcase & NIELIT projects seeded');
+  }
 }

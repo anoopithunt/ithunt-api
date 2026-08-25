@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ithunt-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FIREBASE_PROJECT_ID
+        value: ithunt-3a42d
+      - key: FIREBASE_DATABASE_URL
+        value: https://ithunt-3a42d-default-rtdb.firebaseio.com

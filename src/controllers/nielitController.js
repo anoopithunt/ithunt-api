@@ -26,10 +26,35 @@ export function submitNielitProject(req, res) {
   }
 }
 
-export function getAllNielitProjects(req, res) {
+import { initFirebase } from '../config/firebase.js';
+
+export async function getAllNielitProjects(req, res) {
   try {
-    const { status, level, search } = req.query;
+    const { status, level, search, liveSync } = req.query;
     let projects = db.getCollection('nielitProjects');
+
+    // Live sync directly from Firebase Firestore nielit_projects collection if empty or requested
+    if (projects.length === 0 || liveSync === 'true') {
+      try {
+        const { firestoreDb } = initFirebase();
+        if (firestoreDb) {
+          const snapshot = await firestoreDb.collection('nielit_projects').get();
+          if (!snapshot.empty) {
+            const firestoreProjects = [];
+            snapshot.forEach(doc => {
+              firestoreProjects.push({ id: doc.id, ...doc.data() });
+            });
+            // Update cache
+            if (firestoreProjects.length > 0) {
+              db.resetCollection('nielitProjects', firestoreProjects);
+              projects = firestoreProjects;
+            }
+          }
+        }
+      } catch (fbErr) {
+        // Fallback to local
+      }
+    }
 
     if (status) {
       projects = projects.filter(p => p.status && p.status.toLowerCase() === status.toLowerCase());
@@ -49,7 +74,11 @@ export function getAllNielitProjects(req, res) {
       );
     }
 
-    return successResponse(res, 'NIELIT Projects list retrieved', { projects, totalCount: projects.length });
+    return successResponse(res, 'NIELIT Projects list retrieved', { 
+      projects, 
+      totalCount: projects.length,
+      firestoreCollection: 'nielit_projects'
+    });
   } catch (error) {
     return errorResponse(res, error.message, 500);
   }

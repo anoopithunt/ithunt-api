@@ -3,26 +3,54 @@ import { successResponse, errorResponse, generateRegistrationSlip } from '../uti
 
 export function createAdmission(req, res) {
   try {
-    const { fullName, name, email, phone, mobile, course, track, qualification, address } = req.body;
-    const applicantName = fullName || name;
+    const {
+      fullName,
+      candidateName,
+      name,
+      email,
+      phone,
+      mobile,
+      course,
+      track,
+      qualification,
+      address,
+      fatherName,
+      motherName,
+      dob,
+      gender,
+      district,
+      registrationNumber,
+      registrationNo,
+      status
+    } = req.body;
+
+    const applicantName = fullName || candidateName || name;
     const applicantPhone = phone || mobile;
 
     if (!applicantName || !applicantPhone || !course) {
       return errorResponse(res, 'Full name, phone number, and course selection are required', 400);
     }
 
-    const regNumber = `ITH-${Math.floor(100000 + Math.random() * 900000)}`;
+    const regNumber = registrationNumber || registrationNo || `ITH-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const admission = db.insert('admissions', {
       registrationNumber: regNumber,
+      registrationNo: regNumber,
       fullName: applicantName,
+      candidateName: applicantName,
       email: email || '',
       phone: applicantPhone,
+      mobile: applicantPhone,
       course,
       track: track || 'MERN Stack / Software Engineering',
       qualification: qualification || 'Undergraduate',
       address: address || '',
-      status: 'PROVISIONALLY ADMITTED',
+      fatherName: fatherName || '',
+      motherName: motherName || '',
+      dob: dob || '',
+      gender: gender || 'Male',
+      district: district || 'PRAYAGRAJ',
+      status: (status || 'PROVISIONALLY ADMITTED').toUpperCase(),
       createdAt: new Date().toISOString()
     });
 

@@ -36,6 +36,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust proxy when running behind a reverse proxy/load balancer (useful in production)
+app.set('trust proxy', true);
+
 // Initialize DB & Seed Data
 initDB();
 seedInitialData();
@@ -46,22 +49,22 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'unsafe-none' }
 }));
 
-const allowedOrigins = [
-  'https://ithunt.vercel.app',
-  'https://ithunt.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:8080'
-];
+// CORS configuration: use CORS_ORIGIN env (comma-separated) or '*' to allow all
+const corsOriginRaw = (config.corsOrigin || '*').toString();
+const corsWhitelist = (corsOriginRaw === '*' || !corsOriginRaw) ? null : corsOriginRaw.split(',').map(s => s.trim()).filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    if (config.corsOrigin === '*' || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+    // If wildcard or whitelist is not provided, allow the request
+    if (!corsWhitelist) return callback(null, true);
+    // Allow if origin is in whitelist or if it's a vercel app subdomain
+    if (corsWhitelist.includes(origin) || origin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
-    return callback(null, true);
+    // Reject other origins
+    return callback(new Error('CORS: Origin not allowed by policy'), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
